@@ -33,8 +33,15 @@ RUN docker-php-ext-install -j$(nproc) mysqli pdo pdo_mysql
 #xdebug
 RUN $apt_install autoconf $PHPIZE_DEPS && pecl install xdebug-2.6.0 && docker-php-ext-enable xdebug
 
-ENV DEBIAN_FRONTEND interactive
-
 ENV COMPOSER_VERSION master
 ENV COMPOSER_ALLOW_SUPERUSER 1
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+RUN $apt_install unzip
+RUN docker-php-ext-install -j$(nproc) zip
+
+#APACHE_RUN_USER
+RUN cd .. && rm -r html && composer create-project oxid-esales/oxideshop-project . dev-b-6.1-ce && mv source html
+RUN sed -i -e "s@<dbHost>@oxid6_mysql@g"; "s@<dbName>@oxid@g"; "s@<dbUser>@oxid@g"; \
+"s@<dbPwd>@oxid@g"; "s@<sShopURL>@http://oxid6_apache/@g"; "s@<sShopDir>@/var/www/html@g";\
+ "s@<sCompileDir>@/var/www/html/tmp@g" config.inc.php
